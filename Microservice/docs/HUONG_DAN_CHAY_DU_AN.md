@@ -710,3 +710,23 @@ lsof -ti:5001 | xargs kill -9
 - **Quick Start:** [QUICKSTART.md](./QUICKSTART.md)
 - **Kịch bản demo:** [KICH_BAN_DEMO.md](./KICH_BAN_DEMO.md)
 - **Kiến trúc:** [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+
+cd ~/BTHTPT/Microservice
+sed -i '/volumes:/,+1d' docker-compose.yml
+cat docker-compose.yml | grep volumes
+docker-compose up -d --build
+
+docker volume create portainer_data
+
+docker run -d -p 9000:9000 -p 9443:9443 \
+    --name=portainer \
+    --restart=always \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v portainer_data:/data \
+    portainer/portainer-ce:latest
+
+
+docker run -d --name order-service-v2 -p 5013:8080 sha256:5083346a0885e4b7627a40445a298689430ada0bf6da37956d8e5e538715e433
+docker run -d --name user-service-v2 -p 5011:8080 sha256:fc26a26b5a740c1398fa944ae596a8ca0ecafe81fa6978e6b8ad0d3a77f386d1
+docker run -d --name product-service-v2 -p 5012:8080 sha256:3b22956169dd35d24d61ed4abae6ad076fc113b5860c36defa7ae29cfb7b54ab

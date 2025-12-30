@@ -128,10 +128,6 @@ services:
     networks:
       - microservice-network
 
-volumes:
-  # sqlserver_data:  # Không cần nữa vì dùng PostgreSQL external
-  # rabbitmq_data:   # Không cần nữa vì dùng RabbitMQ external
-
 networks:
   microservice-network:
     driver: bridge
