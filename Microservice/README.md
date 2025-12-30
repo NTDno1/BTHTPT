@@ -8,12 +8,13 @@ Dự án triển khai hệ thống **E-Commerce Backend** theo kiến trúc **Mi
 
 | File | Mô Tả |
 |------|-------|
-| [TONG_QUAN_DU_AN.md](./TONG_QUAN_DU_AN.md) | Tổng quan tính năng và mục đích dự án |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Kiến trúc chi tiết và thiết kế |
-| [HUONG_DAN_CHAY_DU_AN.md](./HUONG_DAN_CHAY_DU_AN.md) | Hướng dẫn chạy dự án từng bước |
-| [QUICKSTART.md](./QUICKSTART.md) | Hướng dẫn nhanh để bắt đầu |
-| [KICH_BAN_DEMO.md](./KICH_BAN_DEMO.md) | Kịch bản demo chi tiết |
-| [GIAI_THICH_KIEN_TRUC.md](./GIAI_THICH_KIEN_TRUC.md) | Giải thích về kiến trúc |
+| [TONG_QUAN_DU_AN.md](./docs/TONG_QUAN_DU_AN.md) | Tổng quan tính năng và mục đích dự án |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Kiến trúc chi tiết và thiết kế |
+| [HUONG_DAN_CHAY_DU_AN.md](./docs/HUONG_DAN_CHAY_DU_AN.md) | Hướng dẫn chạy dự án từng bước |
+| [QUICKSTART.md](./docs/QUICKSTART.md) | Hướng dẫn nhanh để bắt đầu |
+| [KICH_BAN_DEMO.md](./docs/KICH_BAN_DEMO.md) | Kịch bản demo chi tiết |
+| [GIAI_THICH_KIEN_TRUC.md](./docs/GIAI_THICH_KIEN_TRUC.md) | Giải thích về kiến trúc |
+| [HUONG_DAN_RABBITMQ.md](./docs/HUONG_DAN_RABBITMQ.md) | Hướng dẫn API Gateway RabbitMQ |
 | [Frontend/README.md](./Frontend/README.md) | Hướng dẫn Frontend Angular |
 
 ---
@@ -99,7 +100,7 @@ Hệ thống bao gồm **4 microservices** độc lập:
 **Cách 1: Sử dụng Script (Khuyến nghị)**
 ```powershell
 cd Microservice
-.\run-all-services.ps1
+.\scripts\run-all-services.ps1
 ```
 
 **Cách 2: Chạy thủ công**
@@ -172,25 +173,25 @@ Tất cả APIs đều truy cập qua **API Gateway** (http://localhost:5000):
 ## 🗄️ Database Configuration
 
 ### PostgreSQL
-- **Server:** 47.130.33.106:5432
-- **Username:** postgres
-- **Password:** 123456
+- **Server:** `{POSTGRES_SERVER}:{POSTGRES_PORT}` (Cấu hình trong appsettings.json)
+- **Username:** `{POSTGRES_USERNAME}` (Cấu hình trong appsettings.json)
+- **Password:** `{POSTGRES_PASSWORD}` (Cấu hình trong appsettings.json)
 - **Databases:**
   - `userservice_db`
   - `productservice_db`
   - `orderservice_db`
 
 ### MongoDB
-- **Connection:** MongoDB Atlas
+- **Connection:** MongoDB Atlas (Cấu hình trong appsettings.json)
 - **Databases:**
   - `microservice_users` (User Service)
   - `microservice_products` (Product Service)
   - `microservice_orders` (Order Service)
 
 ### RabbitMQ
-- **Server:** 47.130.33.106:5672
-- **Username:** guest
-- **Password:** guest
+- **Server:** `{RABBITMQ_SERVER}:{RABBITMQ_PORT}` (Cấu hình trong appsettings.json)
+- **Username:** `{RABBITMQ_USERNAME}` (Cấu hình trong appsettings.json)
+- **Password:** `{RABBITMQ_PASSWORD}` (Cấu hình trong appsettings.json)
 
 ---
 
@@ -206,9 +207,16 @@ Tất cả APIs đều truy cập qua **API Gateway** (http://localhost:5000):
 
 ## 📖 Xem Thêm
 
-- **Hướng dẫn chi tiết:** [HUONG_DAN_CHAY_DU_AN.md](./HUONG_DAN_CHAY_DU_AN.md)
-- **Kịch bản demo:** [KICH_BAN_DEMO.md](./KICH_BAN_DEMO.md)
-- **Kiến trúc:** [ARCHITECTURE.md](./ARCHITECTURE.md)
+- **Hướng dẫn chi tiết:** [HUONG_DAN_CHAY_DU_AN.md](./docs/HUONG_DAN_CHAY_DU_AN.md)
+- **Kịch bản demo:** [KICH_BAN_DEMO.md](./docs/KICH_BAN_DEMO.md)
+- **Kiến trúc:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- **API Gateway RabbitMQ:** [HUONG_DAN_RABBITMQ.md](./docs/HUONG_DAN_RABBITMQ.md)
+
+## ⚙️ Cấu Hình
+
+Tất cả thông tin cấu hình (database, RabbitMQ, MongoDB) được lưu trong file `appsettings.json` của từng service. Vui lòng cấu hình theo môi trường của bạn.
+
+**Lưu ý:** Không commit file `appsettings.json` chứa thông tin nhạy cảm lên Git. Sử dụng `appsettings.Development.json` cho môi trường local.
 
 ---
 

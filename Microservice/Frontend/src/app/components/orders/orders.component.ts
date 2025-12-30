@@ -12,6 +12,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDialog } from '@angular/material/dialog';
+import { OrderDialogComponent } from './order-dialog.component';
 
 @Component({
   selector: 'app-orders',
@@ -148,7 +150,8 @@ export class OrdersComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -168,7 +171,26 @@ export class OrdersComponent implements OnInit {
   }
 
   openCreateDialog() {
-    this.snackBar.open('Sử dụng Swagger UI hoặc API để tạo đơn hàng mới', 'Đóng', { duration: 3000 });
+    const dialogRef = this.dialog.open(OrderDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.apiService.createOrder(result).subscribe({
+          next: () => {
+            this.snackBar.open('Tạo đơn hàng thành công', 'Đóng', { duration: 2000 });
+            this.loadOrders();
+          },
+          error: (err) => {
+            this.snackBar.open('Lỗi khi tạo đơn hàng: ' + (err.error?.message || 'Unknown error'), 'Đóng', { duration: 3000 });
+            console.error(err);
+          }
+        });
+      }
+    });
   }
 
   updateStatus(orderId: number, status: string) {

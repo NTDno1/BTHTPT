@@ -48,7 +48,8 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors("AllowAll");
-app.UseHttpsRedirection();
+// Disable HTTPS redirection for API Gateway to avoid 307 redirects
+// app.UseHttpsRedirection();
 
 // Enable request buffering to allow reading request body
 app.Use(async (context, next) =>

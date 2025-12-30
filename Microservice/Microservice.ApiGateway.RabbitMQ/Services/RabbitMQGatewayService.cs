@@ -54,7 +54,10 @@ public class RabbitMQGatewayService : IDisposable
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
-                    var response = JsonSerializer.Deserialize<ApiResponse>(message);
+                    var response = JsonSerializer.Deserialize<ApiResponse>(message, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
 
                     if (response != null && _pendingRequests.TryRemove(response.CorrelationId, out var tcs))
                     {
@@ -106,7 +109,10 @@ public class RabbitMQGatewayService : IDisposable
         try
         {
             // Serialize request
-            var json = JsonSerializer.Serialize(request);
+            var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
             var body = Encoding.UTF8.GetBytes(json);
 
             var properties = _channel.CreateBasicProperties();

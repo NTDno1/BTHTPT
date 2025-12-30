@@ -56,7 +56,10 @@ public class GatewayController : ControllerBase
             {
                 try
                 {
-                    requestBody = JsonSerializer.Deserialize<object>(bodyString);
+                    requestBody = JsonSerializer.Deserialize<object>(bodyString, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
                 }
                 catch
                 {

@@ -48,6 +48,7 @@ builder.Services.AddHttpClient();
 // Register Services
 builder.Services.AddSingleton<IMessagePublisher, RabbitMQService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // CORS Configuration
 builder.Services.AddCors(options =>

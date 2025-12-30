@@ -43,6 +43,7 @@ if (!string.IsNullOrEmpty(mongoConnectionString) && !string.IsNullOrEmpty(mongoD
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // CORS Configuration
 builder.Services.AddCors(options =>
