@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # PostgreSQL và MongoDB đang sử dụng từ server external (47.130.33.106)
+  # Không cần chạy trong Docker nữa
+  
+  # RabbitMQ - Sử dụng từ server external
+  # Nếu muốn chạy local, uncomment phần dưới:
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: microservice-rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=guest
+  #     - RABBITMQ_DEFAULT_PASS=guest
+  #   volumes:
+  #     - rabbitmq_data:/var/lib/rabbitmq
+  #   networks:
+  #     - microservice-network
+  #   healthcheck:
+  #     test: rabbitmq-diagnostics -q ping
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: Microservice.Services.UserService/Dockerfile
+    container_name: microservice-user-service
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__PostgreSQL=Host=47.130.33.106;Port=5432;Database=userservice_db;Username=postgres;Password=123456
+      - ConnectionStrings__DefaultConnection=Host=47.130.33.106;Port=5432;Database=userservice_db;Username=postgres;Password=123456
+      - MongoDb__ConnectionString=mongodb+srv://datt19112001_db_user:1@mongodbdatnt.bc8xywz.mongodb.net/?retryWrites=true&w=majority
+      - MongoDb__Database=microservice_users
+      - MongoDb__Collection=user_logs
+    networks:
+      - microservice-network
+
+  # Product Service
+  product-service:
+    build:
+      context: .
+      dockerfile: Microservice.Services.ProductService/Dockerfile
+    container_name: microservice-product-service
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__PostgreSQL=Host=47.130.33.106;Port=5432;Database=productservice_db;Username=postgres;Password=123456
+      - ConnectionStrings__DefaultConnection=Host=47.130.33.106;Port=5432;Database=productservice_db;Username=postgres;Password=123456
+      - MongoDb__ConnectionString=mongodb+srv://datt19112001_db_user:1@mongodbdatnt.bc8xywz.mongodb.net/?retryWrites=true&w=majority
+      - MongoDb__Database=microservice_products
+      - MongoDb__Collection=product_logs
+    networks:
+      - microservice-network
+
+  # Order Service
+  order-service:
+    build:
+      context: .
+      dockerfile: Microservice.Services.OrderService/Dockerfile
+    container_name: microservice-order-service
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__PostgreSQL=Host=47.130.33.106;Port=5432;Database=orderservice_db;Username=postgres;Password=123456
+      - ConnectionStrings__DefaultConnection=Host=47.130.33.106;Port=5432;Database=orderservice_db;Username=postgres;Password=123456
+      - MongoDb__ConnectionString=mongodb+srv://datt19112001_db_user:1@mongodbdatnt.bc8xywz.mongodb.net/?retryWrites=true&w=majority
+      - MongoDb__Database=microservice_orders
+      - MongoDb__Collection=order_events
+      - RabbitMQ__HostName=47.130.33.106
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+      - ServiceUrls__ProductService=http://product-service:8080
+      - ServiceUrls__UserService=http://user-service:8080
+    networks:
+      - microservice-network
+
+  # API Gateway (Ocelot)
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Microservice.ApiGateway/Dockerfile
+    container_name: microservice-api-gateway
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+    networks:
+      - microservice-network
+
+  # API Gateway RabbitMQ
+  api-gateway-rabbitmq:
+    build:
+      context: .
+      dockerfile: Microservice.ApiGateway.RabbitMQ/Dockerfile
+    container_name: microservice-api-gateway-rabbitmq
+    ports:
+      - "5010:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - RabbitMQ__HostName=47.130.33.106
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+    networks:
+      - microservice-network
+
+volumes:
+  # sqlserver_data:  # Không cần nữa vì dùng PostgreSQL external
+  # rabbitmq_data:   # Không cần nữa vì dùng RabbitMQ external
+
+networks:
+  microservice-network:
+    driver: bridge
+
