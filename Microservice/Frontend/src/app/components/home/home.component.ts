@@ -84,10 +84,10 @@ import { RouterModule } from '@angular/router';
           <mat-card-title>Kiến Trúc Hệ Thống</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <p><strong>API Gateway:</strong> http://localhost:5000</p>
-          <p><strong>User Service:</strong> http://localhost:5001</p>
-          <p><strong>Product Service:</strong> http://localhost:5002</p>
-          <p><strong>Order Service:</strong> http://localhost:5003</p>
+          <p><strong>API Gateway:</strong> http://103.82.26.211:5000</p>
+          <p><strong>User Service:</strong> http://103.82.26.211:5001</p>
+          <p><strong>Product Service:</strong> http://103.82.26.211:5002</p>
+          <p><strong>Order Service:</strong> http://103.82.26.211:5003</p>
           <p><strong>Database:</strong> PostgreSQL (userservice_db, productservice_db, orderservice_db)</p>
           <p><strong>Message Queue:</strong> RabbitMQ (47.130.33.106:5672)</p>
         </mat-card-content>

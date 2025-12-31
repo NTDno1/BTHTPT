@@ -128,6 +128,26 @@ services:
     networks:
       - microservice-network
 
+  # Frontend (Angular)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: microservice-frontend
+    ports:
+      - "4200:80"
+    environment:
+      # API URL - trỏ đến server production
+      - API_URL=http://103.82.26.211:5010/api
+      # Hoặc sử dụng API Gateway Ocelot:
+      # - API_URL=http://103.82.26.211:5000/api
+    depends_on:
+      - api-gateway
+      - api-gateway-rabbitmq
+    networks:
+      - microservice-network
+    restart: unless-stopped
+
 networks:
   microservice-network:
     driver: bridge
