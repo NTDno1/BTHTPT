@@ -33,6 +33,7 @@ public class RouteMappingService
         // Extract the first segment after /api/
         // Example: /api/users/123 -> users
         // Example: /api/products -> products
+        // Example: /api/auth/login -> auth (maps to UserService)
         if (string.IsNullOrEmpty(path))
             return null;
 
@@ -41,6 +42,12 @@ public class RouteMappingService
             return null;
 
         var routePrefix = segments[1].ToLower();
+        
+        // Special handling: /api/auth/* routes to UserService
+        if (routePrefix == "auth")
+        {
+            return "UserService";
+        }
         
         if (_routeToServiceMap.TryGetValue(routePrefix, out var serviceName))
         {

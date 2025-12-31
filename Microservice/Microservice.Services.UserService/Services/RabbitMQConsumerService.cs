@@ -177,7 +177,23 @@ public class RabbitMQConsumerService : IHostedService, IDisposable
             var path = request.Path.TrimStart('/');
             var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-            if (segments.Length < 2 || segments[0].ToLower() != "api" || segments[1].ToLower() != "users")
+            if (segments.Length < 2 || segments[0].ToLower() != "api")
+            {
+                response.StatusCode = 404;
+                response.ErrorMessage = "Invalid path";
+                return response;
+            }
+
+            var routeSegment = segments[1].ToLower();
+            
+            // Handle auth routes
+            if (routeSegment == "auth")
+            {
+                return await ProcessAuthRequestAsync(request, userService);
+            }
+
+            // Handle users routes
+            if (routeSegment != "users")
             {
                 response.StatusCode = 404;
                 response.ErrorMessage = "Invalid path";
@@ -340,6 +356,181 @@ public class RabbitMQConsumerService : IHostedService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing request");
+            response.StatusCode = 500;
+            response.ErrorMessage = $"Internal server error: {ex.Message}";
+        }
+
+        return response;
+    }
+
+    private async Task<ApiResponse> ProcessAuthRequestAsync(ApiRequest request, IUserService userService)
+    {
+        var response = new ApiResponse
+        {
+            CorrelationId = request.CorrelationId
+        };
+
+        try
+        {
+            // Parse path to determine action
+            var path = request.Path.TrimStart('/');
+            var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            if (segments.Length < 3 || segments[0].ToLower() != "api" || segments[1].ToLower() != "auth")
+            {
+                response.StatusCode = 404;
+                response.ErrorMessage = "Invalid auth path";
+                return response;
+            }
+
+            var action = segments[2].ToLower();
+
+            // Get JwtService from scope
+            using var scope = _serviceProvider.CreateScope();
+            var jwtService = scope.ServiceProvider.GetRequiredService<IJwtService>();
+
+            if (request.Method.ToUpper() == "POST")
+            {
+                if (action == "login")
+                {
+                    // POST /api/auth/login
+                    if (request.Body == null)
+                    {
+                        response.StatusCode = 400;
+                        response.ErrorMessage = "Request body is required";
+                        return response;
+                    }
+
+                    var loginJson = JsonSerializer.Serialize(request.Body, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+                    var loginRequest = JsonSerializer.Deserialize<LoginRequestDto>(loginJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+
+                    if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
+                    {
+                        response.StatusCode = 400;
+                        response.ErrorMessage = "Username and password are required";
+                        return response;
+                    }
+
+                    // Validate user credentials
+                    var user = await userService.ValidateUserAsync(loginRequest.Username, loginRequest.Password);
+                    
+                    if (user == null)
+                    {
+                        _logger.LogWarning("Failed login attempt for username: {Username}", loginRequest.Username);
+                        response.StatusCode = 401;
+                        response.ErrorMessage = "Invalid username or password";
+                        return response;
+                    }
+
+                    // Generate JWT token
+                    var token = jwtService.GenerateToken(user);
+                    var refreshToken = jwtService.GenerateRefreshToken();
+
+                    // Map user to DTO
+                    var userDto = new UserDto
+                    {
+                        Id = user.Id,
+                        Username = user.Username,
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        PhoneNumber = user.PhoneNumber,
+                        IsActive = user.IsActive,
+                        Role = user.Role,
+                        AvatarUrl = user.AvatarUrl,
+                        CreatedAt = user.CreatedAt
+                    };
+
+                    var loginResponse = new LoginResponseDto
+                    {
+                        Token = token,
+                        RefreshToken = refreshToken,
+                        User = userDto,
+                        ExpiresAt = DateTime.UtcNow.AddMinutes(60)
+                    };
+
+                    _logger.LogInformation("User {UserId} logged in successfully", user.Id);
+                    response.StatusCode = 200;
+                    response.Data = loginResponse;
+                }
+                else if (action == "register")
+                {
+                    // POST /api/auth/register
+                    if (request.Body == null)
+                    {
+                        response.StatusCode = 400;
+                        response.ErrorMessage = "Request body is required";
+                        return response;
+                    }
+
+                    var registerJson = JsonSerializer.Serialize(request.Body, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+                    var createUserDto = JsonSerializer.Deserialize<CreateUserDto>(registerJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+
+                    if (createUserDto == null)
+                    {
+                        response.StatusCode = 400;
+                        response.ErrorMessage = "Invalid request body";
+                        return response;
+                    }
+
+                    // Create user
+                    var userDto = await userService.CreateUserAsync(createUserDto);
+
+                    // Get the created user to generate token
+                    var user = await userService.ValidateUserAsync(createUserDto.Username, createUserDto.Password);
+                    
+                    if (user == null)
+                    {
+                        response.StatusCode = 500;
+                        response.ErrorMessage = "User created but login failed";
+                        return response;
+                    }
+
+                    // Generate JWT token
+                    var token = jwtService.GenerateToken(user);
+                    var refreshToken = jwtService.GenerateRefreshToken();
+
+                    var loginResponse = new LoginResponseDto
+                    {
+                        Token = token,
+                        RefreshToken = refreshToken,
+                        User = userDto,
+                        ExpiresAt = DateTime.UtcNow.AddMinutes(60)
+                    };
+
+                    _logger.LogInformation("User {UserId} registered and logged in successfully", userDto.Id);
+                    response.StatusCode = 201;
+                    response.Data = loginResponse;
+                }
+                else
+                {
+                    response.StatusCode = 404;
+                    response.ErrorMessage = $"Auth action '{action}' not found";
+                }
+            }
+            else
+            {
+                response.StatusCode = 405;
+                response.ErrorMessage = $"Method {request.Method} not allowed for auth endpoints";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing auth request");
             response.StatusCode = 500;
             response.ErrorMessage = $"Internal server error: {ex.Message}";
         }
