@@ -11,6 +11,8 @@ Dự án triển khai hệ thống **E-Commerce Backend** theo kiến trúc **Mi
 | [TONG_QUAN_DU_AN.md](./docs/TONG_QUAN_DU_AN.md) | Tổng quan tính năng và mục đích dự án |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Kiến trúc chi tiết và thiết kế |
 | [HUONG_DAN_CHAY_DU_AN.md](./docs/HUONG_DAN_CHAY_DU_AN.md) | Hướng dẫn chạy dự án từng bước |
+| [HUONG_DAN_TRIEN_KHAI.md](./docs/HUONG_DAN_TRIEN_KHAI.md) | Hướng dẫn triển khai lên production |
+| [HUONG_DAN_BAO_CAO.md](./docs/HUONG_DAN_BAO_CAO.md) | Hướng dẫn viết báo cáo dự án |
 | [QUICKSTART.md](./docs/QUICKSTART.md) | Hướng dẫn nhanh để bắt đầu |
 | [KICH_BAN_DEMO.md](./docs/KICH_BAN_DEMO.md) | Kịch bản demo chi tiết |
 | [GIAI_THICH_KIEN_TRUC.md](./docs/GIAI_THICH_KIEN_TRUC.md) | Giải thích về kiến trúc |

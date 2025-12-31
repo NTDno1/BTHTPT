@@ -74,5 +74,54 @@ public class UsersController : ControllerBase
 
         return NoContent();
     }
+
+    // Address Endpoints
+    [HttpGet("{userId}/addresses")]
+    public async Task<ActionResult<List<UserAddressDto>>> GetUserAddresses(int userId)
+    {
+        var addresses = await _userService.GetUserAddressesAsync(userId);
+        return Ok(addresses);
+    }
+
+    [HttpPost("{userId}/addresses")]
+    public async Task<ActionResult<UserAddressDto>> AddUserAddress(int userId, [FromBody] CreateUserAddressDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var address = await _userService.AddUserAddressAsync(userId, dto);
+            return CreatedAtAction(nameof(GetUserAddresses), new { userId }, address);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding address for user {UserId}", userId);
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut("{userId}/addresses/{addressId}")]
+    public async Task<ActionResult<UserAddressDto>> UpdateUserAddress(int userId, int addressId, [FromBody] UpdateUserAddressDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var address = await _userService.UpdateUserAddressAsync(userId, addressId, dto);
+        if (address == null)
+            return NotFound($"Address with ID {addressId} not found for user {userId}.");
+
+        return Ok(address);
+    }
+
+    [HttpDelete("{userId}/addresses/{addressId}")]
+    public async Task<IActionResult> DeleteUserAddress(int userId, int addressId)
+    {
+        var result = await _userService.DeleteUserAddressAsync(userId, addressId);
+        if (!result)
+            return NotFound($"Address with ID {addressId} not found for user {userId}.");
+
+        return NoContent();
+    }
 }
 

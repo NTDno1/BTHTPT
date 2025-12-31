@@ -65,6 +65,32 @@ import { OrderDialogComponent } from './order-dialog.component';
               <p><strong>Địa chỉ giao hàng:</strong> {{ order.shippingAddress }}</p>
               <p><strong>Ngày tạo:</strong> {{ order.createdAt | date:'short' }}</p>
               
+              <div *ngIf="order.paymentStatus" style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                <h4>Thông Tin Thanh Toán</h4>
+                <p><strong>Phương thức:</strong> {{ order.paymentMethod || 'Chưa chọn' }}</p>
+                <p><strong>Trạng thái:</strong> 
+                  <span [class]="getPaymentStatusClass(order.paymentStatus)">
+                    {{ order.paymentStatus }}
+                  </span>
+                </p>
+                <p *ngIf="order.paymentTransactionId"><strong>Mã giao dịch:</strong> {{ order.paymentTransactionId }}</p>
+                <p *ngIf="order.paymentDate"><strong>Ngày thanh toán:</strong> {{ order.paymentDate | date:'short' }}</p>
+              </div>
+
+              <div *ngIf="order.trackingNumber" style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 4px;">
+                <h4>Thông Tin Vận Chuyển</h4>
+                <p><strong>Đơn vị vận chuyển:</strong> {{ order.shippingCarrier || 'Chưa có' }}</p>
+                <p><strong>Mã vận đơn:</strong> 
+                  <strong style="color: #1976d2;">{{ order.trackingNumber }}</strong>
+                </p>
+                <p *ngIf="order.shippedDate"><strong>Ngày gửi hàng:</strong> {{ order.shippedDate | date:'short' }}</p>
+                <p *ngIf="order.deliveredDate"><strong>Ngày giao hàng:</strong> {{ order.deliveredDate | date:'short' }}</p>
+              </div>
+
+              <p *ngIf="order.notes" style="margin-top: 10px; padding: 10px; background: #fff3e0; border-radius: 4px;">
+                <strong>Ghi chú:</strong> {{ order.notes }}
+              </p>
+              
               <h4>Chi tiết sản phẩm:</h4>
               <table mat-table [dataSource]="order.orderItems" class="items-table">
                 <ng-container matColumnDef="productName">
@@ -130,6 +156,22 @@ import { OrderDialogComponent } from './order-dialog.component';
     .items-table {
       width: 100%;
       margin: 10px 0;
+    }
+    .payment-paid {
+      color: #388e3c;
+      font-weight: bold;
+    }
+    .payment-pending {
+      color: #f57c00;
+      font-weight: bold;
+    }
+    .payment-failed {
+      color: #d32f2f;
+      font-weight: bold;
+    }
+    .payment-refunded {
+      color: #7b1fa2;
+      font-weight: bold;
     }
     .order-actions {
       display: flex;
@@ -219,6 +261,16 @@ export class OrdersComponent implements OnInit {
         }
       });
     }
+  }
+
+  getPaymentStatusClass(status: string): string {
+    if (!status) return '';
+    const statusLower = status.toLowerCase();
+    if (statusLower === 'paid') return 'payment-paid';
+    if (statusLower === 'pending') return 'payment-pending';
+    if (statusLower === 'failed') return 'payment-failed';
+    if (statusLower === 'refunded') return 'payment-refunded';
+    return '';
   }
 
   getStatusColor(status: string): any {

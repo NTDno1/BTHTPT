@@ -59,9 +59,24 @@ import { UserDialogComponent } from './user-dialog.component';
             <td mat-cell *matCellDef="let user">{{ user.email }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="avatar">
+            <th mat-header-cell *matHeaderCellDef>Avatar</th>
+            <td mat-cell *matCellDef="let user">
+              <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+              <mat-icon *ngIf="!user.avatarUrl">account_circle</mat-icon>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="fullName">
             <th mat-header-cell *matHeaderCellDef>Họ Tên</th>
             <td mat-cell *matCellDef="let user">{{ user.firstName }} {{ user.lastName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Vai Trò</th>
+            <td mat-cell *matCellDef="let user">
+              <span [class]="getRoleClass(user.role)">{{ user.role }}</span>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="isActive">
@@ -108,11 +123,22 @@ import { UserDialogComponent } from './user-dialog.component';
       color: red;
       font-weight: bold;
     }
+    .role-admin {
+      color: #d32f2f;
+      font-weight: bold;
+    }
+    .role-manager {
+      color: #1976d2;
+      font-weight: bold;
+    }
+    .role-customer {
+      color: #388e3c;
+    }
   `]
 })
 export class UsersComponent implements OnInit {
   users: User[] = [];
-  displayedColumns: string[] = ['id', 'username', 'email', 'fullName', 'isActive', 'actions'];
+  displayedColumns: string[] = ['id', 'avatar', 'username', 'email', 'fullName', 'role', 'isActive', 'actions'];
 
   constructor(
     private apiService: ApiService,
@@ -127,7 +153,13 @@ export class UsersComponent implements OnInit {
   loadUsers() {
     this.apiService.getUsers().subscribe({
       next: (data) => {
-        this.users = data;
+        // Đảm bảo các fields mới có giá trị mặc định
+        this.users = data.map(u => ({
+          ...u,
+          role: u.role || 'Customer',
+          avatarUrl: u.avatarUrl || undefined,
+          addresses: u.addresses || []
+        }));
       },
       error: (err) => {
         this.snackBar.open('Lỗi khi tải danh sách users', 'Đóng', { duration: 3000 });
@@ -158,31 +190,31 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  editUser(user: User) {
-    const userData: CreateUser = {
-      username: user.username,
-      email: user.email,
-      password: '', // Không cần password khi edit
-      firstName: user.firstName,
-      lastName: user.lastName,
-      phoneNumber: user.phoneNumber
-    };
+  getRoleClass(role: string): string {
+    if (!role) return '';
+    const roleLower = role.toLowerCase();
+    if (roleLower === 'admin') return 'role-admin';
+    if (roleLower === 'manager') return 'role-manager';
+    return 'role-customer';
+  }
 
+  editUser(user: User) {
     const dialogRef = this.dialog.open(UserDialogComponent, {
-      width: '500px',
-      data: userData
+      width: '700px',
+      data: user // Pass full user object
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Loại bỏ password nếu không có thay đổi
-        const updateData: Partial<User> = {
-          username: result.username,
-          email: result.email,
+        const updateData: any = {
           firstName: result.firstName,
           lastName: result.lastName,
           phoneNumber: result.phoneNumber
         };
+        
+        if (result.role) updateData.role = result.role;
+        if (result.avatarUrl !== undefined) updateData.avatarUrl = result.avatarUrl;
         
         this.apiService.updateUser(user.id, updateData).subscribe({
           next: () => {

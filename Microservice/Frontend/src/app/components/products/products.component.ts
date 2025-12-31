@@ -78,7 +78,42 @@ import { ProductDialogComponent } from './product-dialog.component';
 
           <ng-container matColumnDef="price">
             <th mat-header-cell *matHeaderCellDef>Giá</th>
-            <td mat-cell *matCellDef="let product">{{ product.price | number }} VNĐ</td>
+            <td mat-cell *matCellDef="let product">
+              <div *ngIf="product.hasDiscount" style="text-decoration: line-through; color: #999; font-size: 0.9em;">
+                {{ product.price | number }} VNĐ
+              </div>
+              <div [style.color]="product.hasDiscount ? '#d32f2f' : 'inherit'" [style.font-weight]="product.hasDiscount ? 'bold' : 'normal'">
+                {{ (product.discountPrice || product.price) | number }} VNĐ
+              </div>
+              <span *ngIf="product.hasDiscount" class="discount-badge">
+                -{{ ((product.price - (product.discountPrice || 0)) / product.price * 100).toFixed(0) }}%
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="rating">
+            <th mat-header-cell *matHeaderCellDef>Đánh Giá</th>
+            <td mat-cell *matCellDef="let product">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <mat-icon *ngFor="let i of [1,2,3,4,5]" 
+                          [style.color]="i <= (product.averageRating || 0) ? '#ffc107' : '#ddd'"
+                          style="font-size: 18px; width: 18px; height: 18px;">
+                  {{ i <= (product.averageRating || 0) ? 'star' : 'star_border' }}
+                </mat-icon>
+                <span style="margin-left: 5px; font-size: 0.9em; color: #666;">
+                  {{ (product.averageRating || 0).toFixed(1) }} ({{ product.reviewCount || 0 }})
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="tags">
+            <th mat-header-cell *matHeaderCellDef>Tags</th>
+            <td mat-cell *matCellDef="let product">
+              <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                <mat-chip *ngFor="let tag of product.tags" style="font-size: 0.8em;">{{ tag }}</mat-chip>
+              </div>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="stock">
@@ -146,11 +181,21 @@ import { ProductDialogComponent } from './product-dialog.component';
     .unavailable {
       color: red;
     }
+    .discount-badge {
+      display: inline-block;
+      background: #d32f2f;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.75em;
+      font-weight: bold;
+      margin-left: 5px;
+    }
   `]
 })
 export class ProductsComponent implements OnInit {
   products: Product[] = [];
-  displayedColumns: string[] = ['id', 'name', 'category', 'price', 'stock', 'isAvailable', 'actions'];
+  displayedColumns: string[] = ['id', 'name', 'category', 'price', 'rating', 'tags', 'stock', 'isAvailable', 'actions'];
   selectedCategory: string = '';
 
   constructor(
@@ -166,7 +211,15 @@ export class ProductsComponent implements OnInit {
   loadProducts() {
     this.apiService.getProducts().subscribe({
       next: (data) => {
-        this.products = data;
+        // Đảm bảo các fields mới có giá trị mặc định
+        this.products = data.map(p => ({
+          ...p,
+          discountPrice: p.discountPrice || undefined,
+          hasDiscount: p.hasDiscount || false,
+          tags: p.tags || [],
+          averageRating: p.averageRating || 0,
+          reviewCount: p.reviewCount || 0
+        }));
       },
       error: (err) => {
         this.snackBar.open('Lỗi khi tải danh sách sản phẩm', 'Đóng', { duration: 3000 });
@@ -179,7 +232,15 @@ export class ProductsComponent implements OnInit {
     if (this.selectedCategory) {
       this.apiService.getProductsByCategory(this.selectedCategory).subscribe({
         next: (data) => {
-          this.products = data;
+          // Đảm bảo các fields mới có giá trị mặc định
+          this.products = data.map(p => ({
+            ...p,
+            discountPrice: p.discountPrice || undefined,
+            hasDiscount: p.hasDiscount || false,
+            tags: p.tags || [],
+            averageRating: p.averageRating || 0,
+            reviewCount: p.reviewCount || 0
+          }));
         },
         error: (err) => {
           this.snackBar.open('Lỗi khi lọc sản phẩm', 'Đóng', { duration: 3000 });

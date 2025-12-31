@@ -10,6 +10,7 @@ public class UserDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<UserAddress> UserAddresses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,20 @@ public class UserDbContext : DbContext
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(50).HasDefaultValue("Customer");
+            entity.HasMany(e => e.Addresses).WithOne(a => a.User).HasForeignKey(a => a.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserAddress>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Street).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.State).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.PostalCode).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Country).IsRequired().HasMaxLength(100);
         });
     }
 }
