@@ -4,6 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
+import { environment } from '../../config/environment';
 
 @Component({
   selector: 'app-home',
@@ -84,12 +85,12 @@ import { RouterModule } from '@angular/router';
           <mat-card-title>Kiến Trúc Hệ Thống</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <p><strong>API Gateway:</strong> http://103.82.26.211:5000</p>
-          <p><strong>User Service:</strong> http://103.82.26.211:5001</p>
-          <p><strong>Product Service:</strong> http://103.82.26.211:5002</p>
-          <p><strong>Order Service:</strong> http://103.82.26.211:5003</p>
-          <p><strong>Database:</strong> PostgreSQL (userservice_db, productservice_db, orderservice_db)</p>
-          <p><strong>Message Queue:</strong> RabbitMQ (47.130.33.106:5672)</p>
+          <p><strong>API Gateway RabbitMQ:</strong> {{ apiGatewayUrl }}</p>
+          <p><strong>User Service:</strong> {{ userServiceUrl1 }}, {{ userServiceUrl2 }}</p>
+          <p><strong>Product Service:</strong> {{ productServiceUrl1 }}, {{ productServiceUrl2 }}</p>
+          <p><strong>Order Service:</strong> {{ orderServiceUrl1 }}, {{ orderServiceUrl2 }}</p>
+          <p><strong>Database:</strong> {{ databaseInfo }}</p>
+          <p><strong>Message Queue:</strong> RabbitMQ ({{ rabbitMQInfo }})</p>
         </mat-card-content>
       </mat-card>
     </div>
@@ -132,5 +133,16 @@ import { RouterModule } from '@angular/router';
     }
   `]
 })
-export class HomeComponent {}
+export class HomeComponent {
+  // Expose environment variables to template
+  apiGatewayUrl = environment.apiGatewayUrl;
+  userServiceUrl1 = environment.userServiceUrl1;
+  userServiceUrl2 = environment.userServiceUrl2;
+  productServiceUrl1 = environment.productServiceUrl1;
+  productServiceUrl2 = environment.productServiceUrl2;
+  orderServiceUrl1 = environment.orderServiceUrl1;
+  orderServiceUrl2 = environment.orderServiceUrl2;
+  databaseInfo = `${environment.database.userService}, ${environment.database.productService}, ${environment.database.orderService}`;
+  rabbitMQInfo = `${environment.rabbitMQ.host}:${environment.rabbitMQ.port}`;
+}
 

@@ -149,7 +149,7 @@ cd Microservice.Services.UserService
 dotnet ef migrations add AddUserRolesAndAddresses
 dotnet ef database update
 
-# Product Service
+# Product Service 
 cd Microservice.Services.ProductService
 dotnet ef migrations add AddProductReviewsTagsDiscounts
 dotnet ef database update

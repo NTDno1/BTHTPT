@@ -13,6 +13,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { ProductDialogComponent } from './product-dialog.component';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-products',
@@ -37,7 +39,11 @@ import { ProductDialogComponent } from './product-dialog.component';
       </mat-card-header>
       <mat-card-content>
         <div class="actions">
-          <button mat-raised-button color="primary" (click)="openCreateDialog()">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="openCreateDialog()"
+            [disabled]="!authService.isAdmin()">
             <mat-icon>add</mat-icon>
             Thêm Sản Phẩm Mới
           </button>
@@ -137,10 +143,18 @@ import { ProductDialogComponent } from './product-dialog.component';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Thao Tác</th>
             <td mat-cell *matCellDef="let product">
-              <button mat-icon-button color="primary" (click)="editProduct(product)">
+              <button 
+                mat-icon-button 
+                color="primary" 
+                (click)="editProduct(product)"
+                *ngIf="authService.isAdmin()">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deleteProduct(product.id)">
+              <button 
+                mat-icon-button 
+                color="warn" 
+                (click)="deleteProduct(product.id)"
+                *ngIf="authService.isAdmin()">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -201,10 +215,18 @@ export class ProductsComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    public authService: AuthService, // public để dùng trong template
+    private router: Router
   ) {}
 
   ngOnInit() {
+    // Kiểm tra authentication
+    if (!this.authService.isAuthenticated()) {
+      this.snackBar.open('Vui lòng đăng nhập để xem sản phẩm', 'Đóng', { duration: 3000 });
+      this.router.navigate(['/login']);
+      return;
+    }
     this.loadProducts();
   }
 
@@ -253,6 +275,19 @@ export class ProductsComponent implements OnInit {
   }
 
   openCreateDialog() {
+    // Kiểm tra authentication trước khi mở dialog
+    if (!this.authService.isAuthenticated()) {
+      this.snackBar.open('Vui lòng đăng nhập để tạo sản phẩm', 'Đóng', { duration: 3000 });
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Kiểm tra role - chỉ Admin mới được tạo sản phẩm
+    if (!this.authService.isAdmin()) {
+      this.snackBar.open('Chỉ Admin mới có quyền tạo sản phẩm', 'Đóng', { duration: 3000 });
+      return;
+    }
+
     const dialogRef = this.dialog.open(ProductDialogComponent, {
       width: '600px',
       data: null
@@ -275,6 +310,19 @@ export class ProductsComponent implements OnInit {
   }
 
   editProduct(product: Product) {
+    // Kiểm tra authentication
+    if (!this.authService.isAuthenticated()) {
+      this.snackBar.open('Vui lòng đăng nhập để chỉnh sửa sản phẩm', 'Đóng', { duration: 3000 });
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Kiểm tra role - chỉ Admin mới được sửa sản phẩm
+    if (!this.authService.isAdmin()) {
+      this.snackBar.open('Chỉ Admin mới có quyền chỉnh sửa sản phẩm', 'Đóng', { duration: 3000 });
+      return;
+    }
+
     const productData: CreateProduct = {
       name: product.name,
       description: product.description,
@@ -306,6 +354,19 @@ export class ProductsComponent implements OnInit {
   }
 
   deleteProduct(id: number) {
+    // Kiểm tra authentication
+    if (!this.authService.isAuthenticated()) {
+      this.snackBar.open('Vui lòng đăng nhập để xóa sản phẩm', 'Đóng', { duration: 3000 });
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Kiểm tra role - chỉ Admin mới được xóa sản phẩm
+    if (!this.authService.isAdmin()) {
+      this.snackBar.open('Chỉ Admin mới có quyền xóa sản phẩm', 'Đóng', { duration: 3000 });
+      return;
+    }
+
     if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
       this.apiService.deleteProduct(id).subscribe({
         next: () => {

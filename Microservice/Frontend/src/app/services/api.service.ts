@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../config/environment';
 
-const API_BASE_URL = 'http://103.82.26.211:5010/api';
+const API_BASE_URL = environment.apiGatewayApiUrl;
 
 export interface UserAddress {
   id: number;

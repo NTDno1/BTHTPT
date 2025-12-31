@@ -73,11 +73,11 @@ import { Subscription } from 'rxjs';
     <mat-sidenav-container>
       <mat-sidenav #sidenav mode="side" opened>
         <mat-nav-list>
-          <a mat-list-item routerLink="/products" routerLinkActive="active">
-            <mat-icon>inventory</mat-icon>
-            <span>Products</span>
-          </a>
           @if (currentUser) {
+            <a mat-list-item routerLink="/products" routerLinkActive="active">
+              <mat-icon>inventory</mat-icon>
+              <span>Products</span>
+            </a>
             <a mat-list-item routerLink="/users" routerLinkActive="active">
               <mat-icon>people</mat-icon>
               <span>Users</span>

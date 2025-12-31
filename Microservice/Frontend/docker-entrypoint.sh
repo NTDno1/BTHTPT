@@ -7,6 +7,9 @@ if [ -n "$API_URL" ]; then
     find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://localhost:5010/api|$API_URL|g" {} +
     find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://localhost:5000/api|$API_URL|g" {} +
     find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://localhost:5001/api|$API_URL|g" {} +
+    find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://localhost:5010/api|$API_URL|g" {} +
+    find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://localhost:5000/api|$API_URL|g" {} +
+    find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://localhost:5001/api|$API_URL|g" {} +
     find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://103.82.26.211:5010/api|$API_URL|g" {} +
     find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://103.82.26.211:5000/api|$API_URL|g" {} +
     find /usr/share/nginx/html -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|http://103.82.26.211:5001/api|$API_URL|g" {} +

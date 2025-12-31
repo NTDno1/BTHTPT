@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../config/environment';
 
-const API_BASE_URL = 'http://103.82.26.211:5001/api'; // User Service
+const API_BASE_URL = environment.userServiceApiUrl; // User Service
 
 export interface LoginRequest {
   username: string;
