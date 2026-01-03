@@ -5,8 +5,8 @@
  */
 
 // Base URL - Chỉ cần thay đổi ở đây khi deploy sang server khác
-// const BASE_URL = 'http://103.82.26.211';
-const BASE_URL = 'http://localhost';
+const BASE_URL = 'http://103.82.39.10';
+// const BASE_URL = 'http://localhost';
 
 // Ports cho các services
 const PORTS = {

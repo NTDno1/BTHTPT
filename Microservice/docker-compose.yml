@@ -231,8 +231,8 @@ services:
       - "4200:80"
     environment:
       # API URL - trỏ đến API Gateway RabbitMQ (PRIMARY) - Localhost for testing
-      # - API_URL=http://103.82.26.211:5010/api
-      - API_URL=http://localhost:5010/api
+      - API_URL=http://103.82.39.10:5010/api
+      # - API_URL=http://localhost:5010/api
     depends_on:
       - api-gateway-rabbitmq
     networks:
