@@ -4,7 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../config/environment';
 
-const API_BASE_URL = environment.userServiceApiUrl; // User Service
+const API_BASE_URL = environment.apiGatewayApiUrl; // API Gateway
 
 export interface LoginRequest {
   username: string;
