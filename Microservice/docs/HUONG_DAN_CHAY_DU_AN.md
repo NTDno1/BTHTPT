@@ -94,17 +94,18 @@ dotnet run
 ```
 **Kết quả:** http://localhost:5003/swagger
 
-**Terminal 4 - API Gateway:**
+**Terminal 4 - API Gateway RabbitMQ (PRIMARY):**
 ```bash
-cd Microservice/Microservice.ApiGateway
+cd Microservice/Microservice.ApiGateway.RabbitMQ
 dotnet run
 ```
-**Kết quả:** http://localhost:5000/swagger
+**Kết quả:** http://localhost:5010/swagger
 
 ### ⚠️ Lưu Ý
 
-- **Thứ tự:** Chạy services trước, sau đó mới chạy API Gateway
-- **Ports:** Đảm bảo ports 5000-5003 không bị chiếm
+- **Thứ tự:** Chạy services trước, sau đó mới chạy API Gateway RabbitMQ
+- **Ports:** Đảm bảo ports 5001-5004, 5006-5007, 5010 không bị chiếm
+- **API Gateway Ocelot (port 5000) đã bị disable**, chỉ sử dụng RabbitMQ Gateway (port 5010)
 
 ---
 
@@ -148,11 +149,14 @@ Trước khi build Docker, đảm bảo các services external có thể truy c�
 #### 3. Kiểm Tra Ports
 
 Đảm bảo các ports sau không bị chiếm:
-- `5000` - API Gateway
-- `5001` - User Service
-- `5002` - Product Service
-- `5003` - Order Service
-- `5010` - API Gateway RabbitMQ
+- `5001` - User Service Instance 1
+- `5002` - Product Service Instance 1
+- `5003` - Order Service Instance 1
+- `5004` - User Service Instance 2 (Load Balanced)
+- `5006` - Product Service Instance 2 (Load Balanced)
+- `5007` - Order Service Instance 2 (Load Balanced)
+- `5010` - API Gateway RabbitMQ (PRIMARY GATEWAY)
+- `4200` - Frontend (Angular)
 
 **Windows:**
 ```powershell
@@ -221,11 +225,14 @@ docker-compose build
 
 **Build lại một service cụ thể:**
 ```bash
-docker-compose build user-service
-docker-compose build product-service
-docker-compose build order-service
-docker-compose build api-gateway
+docker-compose build user-service-1
+docker-compose build user-service-2
+docker-compose build product-service-1
+docker-compose build product-service-2
+docker-compose build order-service-1
+docker-compose build order-service-2
 docker-compose build api-gateway-rabbitmq
+docker-compose build frontend
 ```
 
 #### Bước 3: Kiểm Tra Trạng Thái Containers
@@ -238,12 +245,17 @@ docker-compose ps
 **Kết quả mong đợi:**
 ```
 NAME                              STATUS              PORTS
-microservice-api-gateway          Up                  0.0.0.0:5000->8080/tcp
 microservice-api-gateway-rabbitmq Up                  0.0.0.0:5010->8080/tcp
-microservice-order-service        Up                  0.0.0.0:5003->8080/tcp
-microservice-product-service      Up                  0.0.0.0:5002->8080/tcp
-microservice-user-service         Up                  0.0.0.0:5001->8080/tcp
+microservice-user-service-1       Up                  0.0.0.0:5001->8080/tcp
+microservice-user-service-2       Up                  0.0.0.0:5004->8080/tcp
+microservice-product-service-1    Up                  0.0.0.0:5002->8080/tcp
+microservice-product-service-2    Up                  0.0.0.0:5006->8080/tcp
+microservice-order-service-1      Up                  0.0.0.0:5003->8080/tcp
+microservice-order-service-2      Up                  0.0.0.0:5007->8080/tcp
+microservice-frontend             Up                  0.0.0.0:4200->80/tcp
 ```
+
+**Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable trong docker-compose.yml
 
 **Xem logs của tất cả services:**
 ```bash
@@ -252,24 +264,40 @@ docker-compose logs -f
 
 **Xem logs của một service cụ thể:**
 ```bash
-docker-compose logs -f user-service
-docker-compose logs -f product-service
-docker-compose logs -f order-service
-docker-compose logs -f api-gateway
+docker-compose logs -f user-service-1
+docker-compose logs -f user-service-2
+docker-compose logs -f product-service-1
+docker-compose logs -f product-service-2
+docker-compose logs -f order-service-1
+docker-compose logs -f order-service-2
+docker-compose logs -f api-gateway-rabbitmq
+docker-compose logs -f frontend
 ```
 
 #### Bước 4: Kiểm Tra Health của Services
 
 **Truy cập Swagger UI:**
-- API Gateway: http://localhost:5000/swagger
-- User Service: http://localhost:5001/swagger
-- Product Service: http://localhost:5002/swagger
-- Order Service: http://localhost:5003/swagger
-- API Gateway RabbitMQ: http://localhost:5010/swagger
+- API Gateway RabbitMQ (PRIMARY): http://localhost:5010/swagger
+- User Service Instance 1: http://localhost:5001/swagger
+- User Service Instance 2: http://localhost:5004/swagger
+- Product Service Instance 1: http://localhost:5002/swagger
+- Product Service Instance 2: http://localhost:5006/swagger
+- Order Service Instance 1: http://localhost:5003/swagger
+- Order Service Instance 2: http://localhost:5007/swagger
+- Frontend: http://localhost:4200
 
-**Test API qua Gateway:**
+**Test API qua Gateway RabbitMQ:**
 ```bash
-curl http://localhost:5000/swagger/index.html
+# Test health check
+curl http://localhost:5010/api/health
+
+# Test user service qua gateway
+curl http://localhost:5010/api/users
+
+# Test auth
+curl -X POST http://localhost:5010/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"test"}'
 ```
 
 ---
@@ -607,7 +635,8 @@ docker-compose up -d --build --no-deps user-service
 docker-compose logs -f user-service
 
 # Vào trong container
-docker exec -it microservice-user-service /bin/bash
+docker exec -it microservice-user-service-1 /bin/bash
+docker exec -it microservice-api-gateway-rabbitmq /bin/bash
 
 # Xóa tất cả và build lại
 docker-compose down -v
@@ -634,31 +663,44 @@ npm start
 ### 1. Kiểm Tra Services
 
 Truy cập Swagger UI:
-- API Gateway: http://localhost:5000/swagger
-- User Service: http://localhost:5001/swagger
-- Product Service: http://localhost:5002/swagger
-- Order Service: http://localhost:5003/swagger
+- API Gateway RabbitMQ (PRIMARY): http://localhost:5010/swagger
+- User Service Instance 1: http://localhost:5001/swagger
+- User Service Instance 2: http://localhost:5004/swagger
+- Product Service Instance 1: http://localhost:5002/swagger
+- Product Service Instance 2: http://localhost:5006/swagger
+- Order Service Instance 1: http://localhost:5003/swagger
+- Order Service Instance 2: http://localhost:5007/swagger
+- Frontend: http://localhost:4200
 
-### 2. Test API
+### 2. Test API qua API Gateway RabbitMQ
 
-**Tạo User:**
+**Đăng ký User:**
 ```bash
-curl -X POST http://localhost:5000/api/users \
+curl -X POST http://localhost:5010/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"test","email":"test@example.com","password":"123","firstName":"Test","lastName":"User"}'
+  -d '{"username":"test","email":"test@example.com","password":"123456","firstName":"Test","lastName":"User"}'
 ```
 
-**Tạo Product:**
+**Đăng nhập:**
 ```bash
-curl -X POST http://localhost:5000/api/products \
+curl -X POST http://localhost:5010/api/auth/login \
   -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"123456"}'
+```
+
+**Tạo Product (cần JWT token):**
+```bash
+curl -X POST http://localhost:5010/api/products \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{"name":"Laptop","description":"High performance","price":15000000,"stock":10,"category":"Electronics"}'
 ```
 
 **Tạo Order:**
 ```bash
-curl -X POST http://localhost:5000/api/orders \
+curl -X POST http://localhost:5010/api/orders \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{"userId":1,"shippingAddress":"123 Main St","orderItems":[{"productId":1,"quantity":2}]}'
 ```
 
@@ -697,10 +739,13 @@ taskkill /PID <PID> /F
 lsof -ti:5001 | xargs kill -9
 ```
 
-### API Gateway Không Route Được
+### API Gateway RabbitMQ Không Route Được
 
 - Đảm bảo các services đã chạy trước
-- Kiểm tra file `ocelot.json`
+- Kiểm tra RabbitMQ server `47.130.33.106:5672` có thể truy cập
+- Kiểm tra RabbitMQ credentials: `guest/guest`
+- Kiểm tra logs của API Gateway RabbitMQ: `docker-compose logs -f api-gateway-rabbitmq`
+- Kiểm tra route mapping trong `RouteMappingService.cs`
 - Kiểm tra ports trong ocelot.json khớp với services
 
 ---

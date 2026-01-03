@@ -43,20 +43,17 @@ docker run -d \
 
 ### API URL Options
 
-1. **API Gateway RabbitMQ (Port 5010):**
+1. **API Gateway RabbitMQ (Port 5010) - PRIMARY:**
    ```bash
    -e API_URL=http://localhost:5010/api
    ```
 
-2. **API Gateway Ocelot (Port 5000):**
-   ```bash
-   -e API_URL=http://localhost:5000/api
-   ```
-
-3. **Docker Network (nếu truy cập từ container):**
+2. **Docker Network (nếu truy cập từ container):**
    ```bash
    -e API_URL=http://api-gateway-rabbitmq:8080/api
    ```
+
+**Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable, chỉ sử dụng RabbitMQ Gateway (port 5010).
 
 ## 🔧 Cấu Trúc Files
 

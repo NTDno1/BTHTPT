@@ -9,10 +9,13 @@ Kịch bản demo chi tiết để trình bày dự án Microservice (25 phút).
 ### ✅ Checklist
 
 - [ ] Tất cả backend services đang chạy
-  - API Gateway: http://localhost:5000
-  - User Service: http://localhost:5001
-  - Product Service: http://localhost:5002
-  - Order Service: http://localhost:5003
+  - API Gateway RabbitMQ (PRIMARY): http://localhost:5010
+  - User Service Instance 1: http://localhost:5001
+  - User Service Instance 2: http://localhost:5004
+  - Product Service Instance 1: http://localhost:5002
+  - Product Service Instance 2: http://localhost:5006
+  - Order Service Instance 1: http://localhost:5003
+  - Order Service Instance 2: http://localhost:5007
 
 - [ ] Frontend đang chạy: http://localhost:4200
 
@@ -20,10 +23,13 @@ Kịch bản demo chi tiết để trình bày dự án Microservice (25 phút).
 
 - [ ] Mở các tab trình duyệt:
   1. Frontend Angular - http://localhost:4200
-  2. API Gateway Swagger - http://localhost:5000/swagger
-  3. User Service Swagger - http://localhost:5001/swagger
-  4. Product Service Swagger - http://localhost:5002/swagger
-  5. Order Service Swagger - http://localhost:5003/swagger
+  2. API Gateway RabbitMQ Swagger - http://localhost:5010/swagger
+  3. User Service Instance 1 Swagger - http://localhost:5001/swagger
+  4. User Service Instance 2 Swagger - http://localhost:5004/swagger
+  5. Product Service Instance 1 Swagger - http://localhost:5002/swagger
+  6. Product Service Instance 2 Swagger - http://localhost:5006/swagger
+  7. Order Service Instance 1 Swagger - http://localhost:5003/swagger
+  8. Order Service Instance 2 Swagger - http://localhost:5007/swagger
 
 ---
 
@@ -33,13 +39,13 @@ Kịch bản demo chi tiết để trình bày dự án Microservice (25 phút).
 
 > "Hôm nay tôi sẽ trình bày về dự án E-Commerce Backend được xây dựng theo kiến trúc Microservice sử dụng .NET 8.0.
 > 
-> Hệ thống bao gồm 4 microservices chính:
-> - User Service: Quản lý người dùng
-> - Product Service: Quản lý sản phẩm
-> - Order Service: Quản lý đơn hàng
-> - API Gateway: Điều hướng requests
+> Hệ thống bao gồm:
+> - User Service: Quản lý người dùng (2 instances - Load Balanced)
+> - Product Service: Quản lý sản phẩm (2 instances - Load Balanced)
+> - Order Service: Quản lý đơn hàng (2 instances - Load Balanced)
+> - API Gateway RabbitMQ: Điều hướng requests qua RabbitMQ với load balancing tự động
 > 
-> Mỗi service có database riêng và có thể deploy độc lập."
+> Mỗi service có database riêng và có thể deploy độc lập. Load balancing được thực hiện tự động qua RabbitMQ."
 
 **Hành động:**
 - Mở Frontend: http://localhost:4200
@@ -53,11 +59,12 @@ Kịch bản demo chi tiết để trình bày dự án Microservice (25 phút).
 
 > "Đây là kiến trúc tổng thể của hệ thống:
 > 
-> - Frontend Angular gửi requests đến API Gateway
-> - API Gateway điều hướng đến các microservices tương ứng
+> - Frontend Angular gửi requests đến API Gateway RabbitMQ (port 5010)
+> - API Gateway RabbitMQ gửi requests qua RabbitMQ queues
+> - RabbitMQ tự động phân phối requests đến các service instances (load balancing)
 > - Mỗi service có PostgreSQL database riêng
 > - MongoDB được dùng cho logging
-> - RabbitMQ được dùng cho message queue"
+> - RabbitMQ được dùng cho cả request routing và message queue"
 
 **Hành động:**
 - Mở các Swagger UI để show endpoints
@@ -73,18 +80,25 @@ Kịch bản demo chi tiết để trình bày dự án Microservice (25 phút).
 
 **Hành động:**
 
-1. **Mở User Service Swagger:** http://localhost:5001/swagger
+1. **Mở User Service Swagger:** http://localhost:5001/swagger hoặc http://localhost:5004/swagger
    - Giải thích các endpoints
    - GET /api/users - Lấy danh sách users
+   - POST /api/auth/login - Đăng nhập với JWT
+   - POST /api/auth/register - Đăng ký
 
-2. **Tạo User mới:**
-   - POST /api/users
-   - Body: `{"username":"demo","email":"demo@example.com","password":"123","firstName":"Demo","lastName":"User"}`
+2. **Đăng ký User mới:**
+   - POST /api/auth/register (qua API Gateway: http://localhost:5010/api/auth/register)
+   - Body: `{"username":"demo","email":"demo@example.com","password":"123456","firstName":"Demo","lastName":"User"}`
 
-3. **Xem danh sách users:**
-   - GET /api/users
+3. **Đăng nhập:**
+   - POST /api/auth/login (qua API Gateway: http://localhost:5010/api/auth/login)
+   - Body: `{"username":"demo","password":"123456"}`
+   - Nhận JWT token
 
-4. **Qua Frontend:**
+4. **Xem danh sách users:**
+   - GET /api/users (qua API Gateway: http://localhost:5010/api/users)
+
+5. **Qua Frontend:**
    - Mở tab Users
    - Show danh sách users
 

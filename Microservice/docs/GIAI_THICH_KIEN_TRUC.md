@@ -10,15 +10,17 @@
 
 ## 🎯 Vai Trò Của Từng Thành Phần
 
-### 1. API Gateway (Ocelot)
+### 1. API Gateway RabbitMQ (PRIMARY GATEWAY)
 
-**Vai trò:** Entry point cho **client requests**
+**Vai trò:** Entry point cho **client requests**, sử dụng RabbitMQ để điều hướng
 
 **Sử dụng bởi:** Frontend, Mobile App, External clients
 
-**Chức năng:** Route HTTP requests đến đúng microservice
+**Chức năng:** Route HTTP requests đến đúng microservice qua RabbitMQ queues
 
-**Port:** 5000
+**Port:** 5010
+
+**Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable, chỉ sử dụng RabbitMQ Gateway.
 
 ---
 
@@ -26,11 +28,14 @@
 
 **Vai trò:** Xử lý business logic
 
-**Sử dụng bởi:** API Gateway (cho client requests)
+**Sử dụng bởi:** API Gateway RabbitMQ (cho client requests qua RabbitMQ)
 
 **Sử dụng:** PostgreSQL, MongoDB, RabbitMQ (trực tiếp)
 
-**Ports:** 5001, 5002, 5003
+**Ports:** 
+- User Service: 5001, 5004 (2 instances - Load Balanced)
+- Product Service: 5002, 5006 (2 instances - Load Balanced)
+- Order Service: 5003, 5007 (2 instances - Load Balanced)
 
 ---
 
@@ -86,11 +91,17 @@
 
 ## 📊 Sơ Đồ Luồng Dữ Liệu
 
-### Luồng Client Request (HTTP):
+### Luồng Client Request (HTTP qua RabbitMQ):
 ```
-Frontend → API Gateway → Microservice → PostgreSQL
-                              ↓
-                          MongoDB (logging)
+Frontend → API Gateway RabbitMQ (5010)
+           ↓ (RabbitMQ message)
+           RabbitMQ Queue
+           ↓ (Auto distribute - Round Robin)
+           Microservice Instance (Load Balanced)
+           ↓
+           PostgreSQL
+           ↓
+           MongoDB (logging)
 ```
 
 ### Luồng Internal Communication (Message Queue):

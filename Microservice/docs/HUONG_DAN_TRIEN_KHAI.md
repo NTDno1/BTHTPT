@@ -1,6 +1,6 @@
 # 🚀 Hướng Dẫn Triển Khai Dự Án Microservice
 
-Tài liệu này hướng dẫn cách triển khai hệ thống Microservice E-Commerce lên môi trường production. Dự án sử dụng kiến trúc microservice với Docker Compose, RabbitMQ cho load balancing, và API Gateway RabbitMQ làm entry point chính.
+Tài liệu này hướng dẫn cách triển khai hệ thống Microservice E-Commerce lên môi trường production. Dự án sử dụng kiến trúc microservice với Docker Compose, RabbitMQ cho load balancing và request routing, và **API Gateway RabbitMQ (port 5010)** làm entry point chính. **Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable.
 
 ---
 

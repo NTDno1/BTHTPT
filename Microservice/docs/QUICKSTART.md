@@ -40,7 +40,13 @@ cd Microservice
 cd Microservice.Services.UserService && dotnet run
 cd Microservice.Services.ProductService && dotnet run
 cd Microservice.Services.OrderService && dotnet run
-cd Microservice.ApiGateway && dotnet run
+cd Microservice.ApiGateway.RabbitMQ && dotnet run
+```
+
+**Cách 3: Docker Compose (Khuyến nghị cho production)**
+```bash
+cd Microservice
+docker-compose up -d --build
 ```
 
 ### Bước 3: Chạy Frontend
@@ -54,33 +60,47 @@ npm start
 ### Bước 4: Truy Cập
 
 - **Frontend:** http://localhost:4200
-- **API Gateway:** http://localhost:5000/swagger
-- **User Service:** http://localhost:5001/swagger
-- **Product Service:** http://localhost:5002/swagger
-- **Order Service:** http://localhost:5003/swagger
+- **API Gateway RabbitMQ (PRIMARY):** http://localhost:5010/swagger
+- **User Service Instance 1:** http://localhost:5001/swagger
+- **User Service Instance 2:** http://localhost:5004/swagger
+- **Product Service Instance 1:** http://localhost:5002/swagger
+- **Product Service Instance 2:** http://localhost:5006/swagger
+- **Order Service Instance 1:** http://localhost:5003/swagger
+- **Order Service Instance 2:** http://localhost:5007/swagger
+
+**Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable, chỉ sử dụng RabbitMQ Gateway (port 5010).
 
 ---
 
-## 📡 Test API
+## 📡 Test API qua API Gateway RabbitMQ
 
-### Tạo User:
+### Đăng ký User:
 ```bash
-curl -X POST http://localhost:5000/api/users \
+curl -X POST http://localhost:5010/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"test","email":"test@example.com","password":"123","firstName":"Test","lastName":"User"}'
+  -d '{"username":"test","email":"test@example.com","password":"123456","firstName":"Test","lastName":"User"}'
 ```
 
-### Tạo Product:
+### Đăng nhập:
 ```bash
-curl -X POST http://localhost:5000/api/products \
+curl -X POST http://localhost:5010/api/auth/login \
   -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"123456"}'
+```
+
+### Tạo Product (cần JWT token):
+```bash
+curl -X POST http://localhost:5010/api/products \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{"name":"Laptop","description":"High performance","price":15000000,"stock":10,"category":"Electronics"}'
 ```
 
 ### Tạo Order:
 ```bash
-curl -X POST http://localhost:5000/api/orders \
+curl -X POST http://localhost:5010/api/orders \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{"userId":1,"shippingAddress":"123 Main St","orderItems":[{"productId":1,"quantity":2}]}'
 ```
 
@@ -96,13 +116,18 @@ curl -X POST http://localhost:5000/api/orders \
 
 ## 📝 Ports
 
-| Service | Port |
-|---------|------|
-| API Gateway | 5000 |
-| User Service | 5001 |
-| Product Service | 5002 |
-| Order Service | 5003 |
-| Frontend | 4200 |
+| Service | Port | Notes |
+|---------|------|-------|
+| API Gateway RabbitMQ (PRIMARY) | 5010 | Entry point chính |
+| User Service Instance 1 | 5001 | Load Balanced |
+| User Service Instance 2 | 5004 | Load Balanced |
+| Product Service Instance 1 | 5002 | Load Balanced |
+| Product Service Instance 2 | 5006 | Load Balanced |
+| Order Service Instance 1 | 5003 | Load Balanced |
+| Order Service Instance 2 | 5007 | Load Balanced |
+| Frontend | 4200 | Angular app |
+
+**Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable.
 
 ---
 

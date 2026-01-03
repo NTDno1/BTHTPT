@@ -4,12 +4,18 @@
 
 ### Ports (Đã Đồng Bộ) ✅
 
-| Service | HTTP Port | HTTPS Port | Swagger |
-|---------|-----------|------------|---------|
-| **API Gateway** | **5000** | 5001 | http://localhost:5000/swagger |
-| **User Service** | **5001** | 5002 | http://localhost:5001/swagger |
-| **Product Service** | **5002** | 5003 | http://localhost:5002/swagger |
-| **Order Service** | **5003** | 5004 | http://localhost:5003/swagger |
+| Service | HTTP Port | Swagger | Notes |
+|---------|-----------|---------|-------|
+| **API Gateway RabbitMQ (PRIMARY)** | **5010** | http://localhost:5010/swagger | Entry point chính |
+| User Service Instance 1 | 5001 | http://localhost:5001/swagger | Load Balanced |
+| User Service Instance 2 | 5004 | http://localhost:5004/swagger | Load Balanced |
+| Product Service Instance 1 | 5002 | http://localhost:5002/swagger | Load Balanced |
+| Product Service Instance 2 | 5006 | http://localhost:5006/swagger | Load Balanced |
+| Order Service Instance 1 | 5003 | http://localhost:5003/swagger | Load Balanced |
+| Order Service Instance 2 | 5007 | http://localhost:5007/swagger | Load Balanced |
+| Frontend | 4200 | http://localhost:4200 | Angular app |
+
+**Lưu ý:** API Gateway Ocelot (port 5000) đã bị disable.
 
 ### Databases (Đã Đồng Bộ) ✅
 
@@ -47,7 +53,8 @@ mongodb+srv://datt19112001_db_user:1@mongodbdatnt.bc8xywz.mongodb.net/?retryWrit
 ### Frontend (Đã Đồng Bộ) ✅
 
 - **URL:** http://localhost:4200
-- **API Base URL:** http://localhost:5000/api (trỏ đến API Gateway)
+- **API Base URL:** http://localhost:5010/api (trỏ đến API Gateway RabbitMQ)
+- **Config File:** `Frontend/src/app/config/environment.ts`
 
 ---
 
@@ -62,9 +69,10 @@ mongodb+srv://datt19112001_db_user:1@mongodbdatnt.bc8xywz.mongodb.net/?retryWrit
 - Service ports đã được set đúng
 - MongoDB và RabbitMQ config đã đúng
 
-### ✅ ocelot.json
-- Routes đã được cấu hình đúng ports
-- BaseUrl: http://localhost:5000
+### ✅ API Gateway RabbitMQ Configuration
+- Route mapping trong `RouteMappingService.cs`
+- Queues: `api.user.request`, `api.product.request`, `api.order.request`
+- BaseUrl: http://localhost:5010
 
 ---
 
@@ -103,10 +111,13 @@ npm start
 
 ### Truy Cập:
 - Frontend: http://localhost:4200
-- API Gateway: http://localhost:5000/swagger
-- User Service: http://localhost:5001/swagger
-- Product Service: http://localhost:5002/swagger
-- Order Service: http://localhost:5003/swagger
+- API Gateway RabbitMQ (PRIMARY): http://localhost:5010/swagger
+- User Service Instance 1: http://localhost:5001/swagger
+- User Service Instance 2: http://localhost:5004/swagger
+- Product Service Instance 1: http://localhost:5002/swagger
+- Product Service Instance 2: http://localhost:5006/swagger
+- Order Service Instance 1: http://localhost:5003/swagger
+- Order Service Instance 2: http://localhost:5007/swagger
 
 ---
 
